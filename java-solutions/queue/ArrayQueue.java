@@ -3,45 +3,29 @@ package queue;
 import java.util.Objects;
 
 /**
- * This: queue as class
- * <h3> Classes {@link queue.ArrayQueueModule}, {@link queue.ArrayQueueADT}, {@link queue.ArrayQueue}</h3>
- * Model: {@code a[0 .. size - 1], first in (in tail) -- first out (from head)}
+ * This: class mode
  * <br/>
- * Invariant: {@code size >= 0 && for i in [0, size): a[i] != null && a[0] -- queue head && a[size - 1] -- queue tail}
- * (tail -> a[size - 1], head -> a[0])
- * <br/>
- * Let {@code saveOrder(array1, head1, array2, head2, cnt): for i in [0, cnt) array1[head1 + i] == array2[head2 + i]}
- * <br/>
- * Let {@code immutable(n) = saveOrder(a, 0, a', 0, min(size, size'))}
+ * <h3> Class: {@link queue.ArrayQueue} extends {@link queue.AbstractQueue} implements {@link queue.Queue} </h3>
  */
-public class ArrayQueue {
+public class ArrayQueue extends AbstractQueue {
     private Object[] elements;
-    private int head, size;
+    private int head;
 
-    public ArrayQueue() {
-        elements = new Object[2];
+    @Override
+    protected void init() {
         head = 0;
-        size = 0;
+        elements = new Object[2];
     }
 
-    /**
-     * <h3>Function {@link queue.ArrayQueue#enqueue(Object)}</h3>
-     * Pred: {@code element != null}
-     * <br>
-     * Post: {@code size' == size + 1 && a[size'] == element && immutable(size)}
-     * @param element not null object
-     * @throws NullPointerException if element is null
-     */
-    public void enqueue(/*ArrayQueue this,*/ final Object element) {
-        Objects.requireNonNull(element);
+    @Override
+    protected void pushBack(final Object element, int size) {
         ensureCapacity(size + 1);
         int tail = (head + size) % elements.length;
         elements[tail] = element;
-        size++;
     }
 
     /**
-     * <h3>Function {@link queue.ArrayQueue#ensureCapacity(int)}</h3>
+     * <h3>Function {@link ArrayQueue#ensureCapacity(int)}</h3>
      * @param capacity integer
      */
     private void ensureCapacity(final int capacity) {
@@ -54,69 +38,111 @@ public class ArrayQueue {
         }
     }
 
-    /**
-     * <h3>Function {@link queue.ArrayQueue#element()}</h3>
-     * Pred: {@code size >= 1}
-     * <br>
-     * Post: {@code R == a[0] && immutable(size) && size' == size}
-     * @return R -- not null object
-     * @throws AssertionError if size == 0
-     */
-    public Object element() {
-        assert size >= 1;
+    @Override
+    protected void popFront() {
+        elements[head] = null;
+        if (++head == elements.length) {
+            head = 0;
+        }
+    }
+
+    @Override
+    protected Object elementImpl() {
         return elements[head];
     }
 
+    ////////////////////////////////////////////////////////////////////////
+    //                       Modification DequeIndex                     //
+
     /**
-     * <h3>Function {@link queue.ArrayQueue#dequeue()}</h3>
+     * <h3>Function {@link queue.ArrayQueue#push(Object)}</h3>
+     * Pred: {@code element != null}
+     * <br>
+     * Post: {@code size' == size + 1 && a'[0] == element && saveOrder(a, 0, a', 1, size) }
+     * @param element not null Object
+     * @throws NullPointerException if element is null
+     */
+    public void push(final Object element) {
+        Objects.requireNonNull(element);
+        ensureCapacity(size() + 1);
+        head = (head - 1 + elements.length) % elements.length;
+        elements[head] = element;
+        size++;
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueue#peek()}</h3>
      * Pred: {@code size >= 1}
      * <br>
-     * Post: {@code R == a[0] && size' == size - 1 && saveOrder(a, 1, a', 0, size')}
-     * @return R -- not null object
+     * Post: {@code R == a[size - 1] && immutable(size) && size' == size }
+     * @return R -- not null Object
      * @throws AssertionError if size == 0
      */
-    public Object dequeue() {
-        assert size >= 1;
-        Object element = elements[head];
-        elements[head] = null;
+    public Object peek() {
+        assert size() >= 1;
+        int tail = (head + size() - 1 + elements.length) % elements.length;
+        return elements[tail];
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueue#remove()}</h3>
+     * Pred: {@code size >= 1}
+     * <br>
+     * Post: {@code R == a[size - 1] && size' == size - 1 && immutable(size') }
+     * @return R -- not null Object
+     * @throws AssertionError if size == 0
+     */
+    public Object remove() {
+        assert size() >= 1;
+        int ind = (head + size() - 1) % elements.length;
+        Object element = elements[ind];
+        elements[ind] = null;
         size--;
-        if (++head == elements.length) {
+        if (head == elements.length) {
             head = 0;
         }
         return element;
     }
 
     /**
-     * <h3>Function {@link queue.ArrayQueue#size()}</h3>
-     * Pred: {@code true}
+     * <h3>Function {@link queue.ArrayQueue#indexOf(Object)}</h3>
+     * Pred: {@code expect != null }
      * <br>
-     * Post: {@code R == size && size' == size && immutable(size) }
-     * @return R
+     * Post: {@code R == χ(a, expect) * [1 + min { d in [0, size) : a[d] == expect }] - 1 && size' == size && immutable(size) }
+     * @param expect not null Object
+     * @return R -- integer in {@code [-1, size)}
+     * @throws NullPointerException if expect is null
      */
-    public int size() {
-        return size;
+    public int indexOf(final Object expect) {
+        Objects.requireNonNull(expect);
+        int cnt = -1;
+        int length = elements.length;
+        while (++cnt < size()) {
+            if (elements[(head + cnt) % length].equals(expect)) {
+                return cnt;
+            }
+        }
+        return -1;
     }
 
     /**
-     * <h3>Function {@link queue.ArrayQueue#isEmpty()}</h3>
-     * Pred: {@code true}
+     * <h3>Function {@link queue.ArrayQueue#lastIndexOf(Object)}</h3>
+     * Pred: {@code expect != null }
      * <br>
-     * Post: {@code R == (size == 0) && immutable(size) && size' == size }
-     * @return R
+     * Post: {@code R == χ(a, expect) * [1 + max { d in [0, size) : a[d] == expect }] - 1 && size' == size && immutable(size) }
+     * @param expect not null Object
+     * @return R -- integer in {@code [-1, size)}
+     * @throws NullPointerException if expect is null
      */
-    public boolean isEmpty() {
-        return size == 0;
-    }
-
-    /**
-     * <h3>Function {@link queue.ArrayQueue#clear()}</h3>
-     * Pred: {@code true}
-     * <br>
-     * Post: {@code size' == 0 }
-     */
-    public void clear() {
-        size = 0;
-        head = 0;
-        elements = new Object[2];
+    public int lastIndexOf(final Object expect) {
+        Objects.requireNonNull(expect);
+        int cnt = size();
+        int length = elements.length;
+        while (--cnt >= 0) {
+            if (elements[(head + cnt) % length].equals(expect)) {
+                return cnt;
+            }
+        }
+        return -1;
     }
 }

@@ -3,16 +3,18 @@ package queue;
 import java.util.Objects;
 
 /**
- * This: one class instance
- * <h3> Classes {@link queue.ArrayQueueModule}, {@link queue.ArrayQueueADT}, {@link queue.ArrayQueue}</h3>
- * Model: {@code a[0 .. size - 1], first in (in tail) -- first out (from head)}
+ * This: module mode
+ * <h3> Class: {@link queue.ArrayQueueModule}</h3>
+ * <i>Model</i>: {@code a[0 .. size - 1], first in (in tail) -- first out (from head)}
  * <br/>
- * Invariant: {@code size >= 0 && for i in [0, size): a[i] != null && a[0] -- queue head && a[size - 1] -- queue tail}
+ * <i>Invariant</i>: {@code size >= 0 && for i in [0, size): a[i] != null && a[0] -- queue head && a[size - 1] -- queue tail}
  * (tail -> a[size - 1], head -> a[0])
  * <br/>
- * Let {@code saveOrder(array1, head1, array2, head2, cnt): for i in [0, cnt) array1[head1 + i] == array2[head2 + i]}
+ * Let <b>saveOrder</b>{@code (array1, head1, array2, head2, cnt): for i in [0, cnt) array1[head1 + i] == array2[head2 + i]}
  * <br/>
- * Let {@code immutable(n) = saveOrder(a, 0, a', 0, min(size, size'))}
+ * Let <b>immutable</b>{@code (n) = saveOrder(a, 0, a', 0, n)}
+ * @see queue.ArrayQueueADT
+ * @see queue.ArrayQueue
  */
 public class ArrayQueueModule {
     private static Object[] elements = new Object[2];
@@ -112,5 +114,93 @@ public class ArrayQueueModule {
         size = 0;
         head = 0;
         elements = new Object[2];
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueueModule#push(Object)}</h3>
+     * Pred: {@code element != null}
+     * <br>
+     * Post: {@code size' == size + 1 && a'[0] == element && saveOrder(a, 0, a', 1, size) }
+     * @param element not null Object
+     * @throws NullPointerException if element is null
+     */
+    public static void push(final Object element) {
+        Objects.requireNonNull(element);
+        ensureCapacity(size + 1);
+        head = (head - 1 + elements.length) % elements.length;
+        elements[head] = element;
+        size++;
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueueModule#peek()}</h3>
+     * Pred: {@code size >= 1}
+     * <br>
+     * Post: {@code R == a[size - 1] && immutable(size) && size' == size }
+     * @return R -- not null Object
+     * @throws AssertionError if size == 0
+     */
+    public static Object peek() {
+        assert size >= 1;
+        return elements[(head + size - 1) % elements.length];
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueueModule#remove()}</h3>
+     * Pred: {@code size >= 1}
+     * <br>
+     * Post: {@code R == a[size - 1] && size' == size - 1 && immutable(size') }
+     * @return R -- not null Object
+     * @throws AssertionError if size == 0
+     */
+    public static Object remove() {
+        assert size >= 1;
+        int ind = (head + size - 1) % elements.length;
+        Object element = elements[ind];
+        elements[ind] = null;
+        size--;
+        return element;
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueueModule#indexOf(Object)}</h3>
+     * Pred: {@code expect != null }
+     * <br>
+     * Post: {@code R == χ(a, expect) * [1 + min { d in [0, size) : a[d] == expect }] - 1 && size' == size && immutable(size) }
+     * @param expect not null Object
+     * @return R -- integer in {@code [-1, size)}
+     * @throws NullPointerException if expect is null
+     */
+    public static int indexOf(final Object expect) {
+        Objects.requireNonNull(expect);
+        int cnt = -1;
+        int length = elements.length;
+        while (++cnt < size) {
+            if (elements[(head + cnt) % length].equals(expect)) {
+                return cnt;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * <h3>Function {@link queue.ArrayQueueModule#lastIndexOf(Object)}</h3>
+     * Pred: {@code expect != null }
+     * <br>
+     * Post: {@code R == χ(a, expect) * [1 + max { d in [0, size) : a[d] == expect }] - 1 && size' == size && immutable(size) }
+     * @param expect not null Object
+     * @return R -- integer in {@code [-1, size)}
+     * @throws NullPointerException if expect is null
+     */
+    public static int lastIndexOf(final Object expect) {
+        Objects.requireNonNull(expect);
+        int cnt = size;
+        int length = elements.length;
+        while (--cnt >= 0) {
+            if (elements[(head + cnt) % length].equals(expect)) {
+                return cnt;
+            }
+        }
+        return -1;
     }
 }
