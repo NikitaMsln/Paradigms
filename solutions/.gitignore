@@ -1,0 +1,56 @@
+# Do not store hidden files and directories, including .idea project
+.*
+
+# Do not store anything starting with _
+_*
+
+# Do not store .class files
+*.class
+
+# Store .git files
+!.git*
+
+# Tests and notes
+Lesson_??_??.java
+*Test*.java
+!My*Test*.java
+package-info.java
+*.jar
+*.txt
+*.kt
+*.cmd
+
+# User's gitignore java
+/java-solutions/base/
+/java-solutions/expression/common/
+/java-solutions/expression/exceptions/TripleParser.java
+/java-solutions/expression/generic/Tabulator.java
+/java-solutions/expression/parser/Operations.java
+/java-solutions/expression/parser/TripleParser.java
+/java-solutions/expression/Expression.java
+/java-solutions/expression/ToMiniString.java
+/java-solutions/expression/TripleExpression.java
+/java-solutions/lessons/
+/java-solutions/queue/Queues.java
+/java-solutions/expression/Tabulator.java
+/java-solutions/myBase/Tensor.java
+/java-solutions/myBase/Matrix.java
+/java-solutions/myBase/reqular/
+
+# User's gitignore javascript
+/javascript-solutions/base/
+/javascript-solutions/examples/
+/javascript-solutions/graal/
+/javascript-solutions/jstest/
+/javascript-solutions/examples.js
+/javascript-solutions/RunJS.java
+/javascript-solutions/RunJS.cmd
+/javascript-solutions/RunJS.html
+/javascript-solutions/RunJS.node.js
+/javascript-solutions/RunJS.sh
+/javascript-solutions/TestJS.cmd
+/javascript-solutions/TestJS.sh
+/javascript-solutions/test.cmd
+/javascript-solutions/run.cmd
+
+/clojure-solutions/golf.js
