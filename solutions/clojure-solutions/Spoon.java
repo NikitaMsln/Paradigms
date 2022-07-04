@@ -1,7 +1,7 @@
 import java.util.Map;
 
 public class Spoon {
-    private int i = 0;
+    private int j = 0;
     private final char[] arr = new char[30_000];
     private String input;
     private String program;
@@ -18,44 +18,53 @@ public class Spoon {
             "001010", '.'
     );
 
-    private String toBrainFuck(String x) {
-        if (x.isEmpty()) return "";
+    private StringBuilder toBrainFuckReversed(final String x) {
+        if (x.isEmpty()) return new StringBuilder();
         for (Map.Entry<String, Character> command : commands.entrySet()) {
             if (x.startsWith(command.getKey())) {
-                return command.getValue() + toBrainFuck(x.substring(command.getKey().length()));
+                return toBrainFuckReversed(x.substring(command.getKey().length())).append(command.getValue());
             }
         }
         throw new IllegalArgumentException("Unknown argument");
     }
 
-    public void runProgram(String program, String input) {
+    public void runProgram(final String program, final String input, final String mode) {
         this.input = input;
-        this.program = toBrainFuck(program);
-        System.out.println(this.program);
-        run(0);
+        this.program = mode.equals("bf") ? program : toBrainFuckReversed(program).toString();
+        runBf();
     }
 
-    private void run(int ind) {
-        if (ind >= program.length()) return;
-        switch (program.charAt(ind)) {
-            case '+' -> arr[i]++;
-            case '-' -> arr[i]--;
-            case '>' -> i++;
-            case '<' -> i--;
-            case ',' -> arr[i] = input.charAt(pos++);
-            case '.' -> System.out.print(arr[i]);
-            case ']' -> bal--;
-            case '[' -> {
-                int tmpBal = bal, forSt = ind;
-                while (arr[i] != 0) {
-                    ind = forSt;
-                    bal = tmpBal + 1;
-                    while (bal != tmpBal) {
-                        run(++ind);
+    private char at(int i) {
+        return program.charAt(i);
+    }
+
+    private void runBf() {
+        for (int i = 0; i < program.length(); i++) {
+            switch (at(i)) {
+                case '>' -> j++;
+                case '<' -> j--;
+                case '+' -> arr[j]++;
+                case '-' -> arr[j]--;
+                case '.' -> System.out.print(arr[j]);
+                case ',' -> arr[j] = input.charAt(pos++);
+                case '[' -> {
+                    if (arr[j] != 0) continue;
+                    while (++bal != 0) {
+                        switch (at(++i)) {
+                            case '[' -> bal++;
+                            case ']' -> bal--;
+                        }
+                    }
+                }
+                case ']' -> {
+                    if (arr[j] == 0) continue;
+                    if (at(i) == ']') bal++;
+                    while (--i >= 0 && bal != 0) {
+                        if (at(i) == '[') bal--;
+                        if (at(i) == ']') bal++;
                     }
                 }
             }
         }
-        run(++ind);
     }
 }
