@@ -153,9 +153,3 @@
 (def hb- (hb-func -' 0))
 (def hb* (hb-func *' 1))
 (def hbd (hb-func / 1))
-
-(def transpose [a sigma]
-    (let [n (count sigma)]
-        {:pre [(and (every? number? sigma) (== (dec n) (max (sort sigma))) (== 0 (min (sort sigma))))]}
-        )
-    )
