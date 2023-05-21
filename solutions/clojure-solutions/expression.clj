@@ -20,20 +20,36 @@
 
 (defn constant [value] (fn [vals] value))
 (defn variable [name] (fn [vals] {:pre [(and (map? vals) (contains? vals name))]} (vals name)))
-(defn make-op [op] (fn [& operands] (fn [vals] (apply op (mapv #(% vals) operands)))))
+(def make-op
+  (letfn [(help [op cnt] (fn [& operands]
+                           {:pre [(or (= cnt -1) (= (count operands) cnt))]}
+                           (fn [vals] (apply op (mapv #(% vals) operands)))))
+          (ans
+           ([op] (help op -1))
+           ([op cnt] (help op cnt)))]
+  ans))
 (def add (make-op +'))
 (def subtract (make-op -'))
 (def multiply (make-op *'))
 (def divide (make-op my-div))
-(defn negate [arg] (fn [vals] (- (arg vals))))
-(def exp (make-op #(Math/exp %)))
+(def negate (make-op - 1))
+(def exp (make-op #(Math/exp %) 1))
+(def ln (make-op #(Math/log (Math/abs %)) 1))
+(def arcTan (make-op #(Math/atan %) 1))
+(def arcTan2 (make-op #(Math/atan2 %1 %2)))
 (defn sumexp [& operands] (apply add (mapv exp operands)))
+(def lse (comp ln sumexp))
 (defn softmax [& operands] (divide (exp (first operands)) (apply sumexp operands)))
-(def get-op {'+ add '- subtract '* multiply '/ divide 'negate negate 'sumexp sumexp 'softmax softmax})
+(def square (make-op #(* % %) 1))
+(def sqrt (make-op #(Math/sqrt %) 1))
+(defn meansq [& operands] (divide (apply add (mapv square operands)) (constant (count operands))))
+(def rms (comp sqrt meansq))
+(def get-op {'+ add '- subtract '* multiply '/ divide 'negate negate
+             'exp exp 'ln ln 'sqrt sqrt 'square square
+             'atan arcTan 'atan2 arcTan2
+             'lse lse 'sumexp sumexp 'softmax softmax
+             'meansq meansq 'rms rms})
 (def parseFunction (make-parser constant variable get-op))
-
-(println (== ##-Inf (my-div -1.0 0.0)))
-(println (== ##Inf (my-div 1.0 0.0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; HT11 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
