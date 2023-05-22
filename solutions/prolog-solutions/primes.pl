@@ -30,3 +30,11 @@ merge([H1 | T1], [H2 | T2], [H1 | T]) :- H1 < H2, merge(T1, [H2 | T2], T).
 merge([H1 | T1], [H2 | T2], [H2 | T]) :- H1 > H2, merge([H1 | T1], T2, T).
 
 lcm(A, B, R) :- prime_divisors(A, X1), prime_divisors(B, X2), merge(X1, X2, X), prod(X, R).
+
+square_divisors(1, []) :- !.
+square_divisors(N, [P, P | T]) :- number(N), !, is_min_divisor(N, P), N1 is div(N, P), square_divisors(N1, T).
+square_divisors(N, [P, P | T]) :- square_divisors(N1, T), N is N1 * P, is_min_divisor(N, P).
+
+cube_divisors(1, []) :- !.
+cube_divisors(N, [P, P, P | T]) :- number(N), !, is_min_divisor(N, P), N1 is div(N, P), cube_divisors(N1, T).
+cube_divisors(N, [P, P, P | T]) :- cube_divisors(N1, T), N is N1 * P, is_min_divisor(N, P).
